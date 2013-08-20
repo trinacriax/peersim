@@ -3,12 +3,12 @@ VER=1.0.2
 .PHONY: all clean doc release
 
 all:
-	javac -classpath .:jep-2.3.0.jar:djep-1.0.0.jar `find -name "*.java"`
+	javac -g -classpath .:jep-2.3.0.jar:djep-1.0.0.jar `find -name "*.java"`
 clean:
 	rm -f `find -name "*.class"`
 doc:
 	rm -rf doc/*
-	javadoc -overview overview.html -classpath .:jep-2.3.0.jar:djep-1.0.0.jar -d doc \
+	javadoc -overview overview.html -verbose -classpath .:jep-2.3.0.jar:djep-1.0.0.jar -d doc \
                 -group "Peersim" "peersim*" \
                 -group "Examples" "example.*" \
 		peersim \
