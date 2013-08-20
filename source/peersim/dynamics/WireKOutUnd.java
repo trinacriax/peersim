@@ -35,12 +35,9 @@ public class WireKOutUnd extends WireGraph {
 //--------------------------------------------------------------------------
 
 /**
- * The number of outgoing edges to generate from each node.
- * Passed to {@link GraphFactory#wireKOut}.
+ * The number of outgoing symmetric-edges to generate from each node.
+ * Passed to {@link GraphFactory#wireKOutUnd}.
  * No loop edges are generated.
- * In the undirected case, the degree
- * of nodes will be on average almost twice as much because the incoming links
- * also become links out of each node.
  * @config
  */
 private static final String PAR_DEGREE = "k";
@@ -50,7 +47,7 @@ private static final String PAR_DEGREE = "k";
 //--------------------------------------------------------------------------
 
 /**
- * The number of outgoing edges to generate from each node.
+ * The number of outgoing symmetric-edges to generate from each node.
  */
 private final int k;
 
@@ -73,7 +70,7 @@ public WireKOutUnd(String prefix)
 //Methods
 //--------------------------------------------------------------------------
 
-/** Calls {@link GraphFactory#wireKOut}. */
+/** Calls {@link GraphFactory#wireKOutUnd}. */
 public void wire(Graph g) {
 	GraphFactory.wireKOutUnd(g,k,CommonState.r);
 }
