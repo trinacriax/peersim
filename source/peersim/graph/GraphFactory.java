@@ -268,9 +268,9 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
         return g;
     }
         
-    public static Graph wireKOutUnd( Graph g, int k, Random r ) {
-        int deb = 0;
-        if (deb > 8) {
+    public static Graph wireKOutUnd(Graph g, int k, Random r) {
+        int debug = 0;
+        if (debug > 8) {
             System.out.println("Nodes " + g.size() + " links " + k);
         }
         final int n = g.size();
@@ -289,7 +289,7 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
                 matrix[i][j] = 0;
             }
         }
-        if (deb > 8) {
+        if (debug > 8) {
             System.out.println("Adjacency matrix initilized and empty. " + n);
         }
         //matrice usata per permutare gli indici dei nodi
@@ -306,19 +306,19 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
         }
         for (int current = 0; current < n; current++) {
             int curr_links = 0;
-            if (deb > 8) {
+            if (debug > 8) {
                 System.out.print("\nNode " + current + " > |");
             }
             //check number of edges of this node
             for (int c = 0; c < n; c++) {
-                if (deb > 8) {
+                if (debug > 8) {
                     System.out.print(matrix[current][c] + "|");
                 }
                 if (matrix[current][c] == 1) {
                     curr_links++;
                 }
             }
-            if (deb > 8) {
+            if (debug > 8) {
                 System.out.println("< # " + curr_links + ", looking for " + (k - curr_links) + " links.");
             }
             int j = n;//available nodes for set.
@@ -329,10 +329,11 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
                     nodes[i] = nodes[n - 1];
                     nodes[n - 1] = tmp;
                     j--;
+                    i=n;
                 }
             }
-            if (deb > 8) {
-                System.out.println("Start while for " + current + ", size " + j + " escluding " + nodes[j + 1]);
+            if (debug > 8) {
+                System.out.println("Start while for " + current + ", size " + j + " escluding " + nodes[j]);
             }
             //creo archi finche` posso
             while (curr_links < k && j > 0) {
@@ -343,10 +344,10 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
                         cnd_link++;
                     }
                 }
-                if (deb > 8) {
+                if (debug > 8) {
                     System.out.println("Candidate " + nodes[candidate_id] + " (" + candidate_id + ")");
                 }
-                if (deb > 8) {
+                if (debug > 8) {
                     System.out.println((cnd_link < k) + "  AND " + (j > 0));
                 }
                 int split = -1;
@@ -354,12 +355,12 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
                 while (curr_links < k && j > 0) {
                     //se esiste gia` un link tra ALFA e BETA oppure se ALFA e BETA sono gli stessi nodi
                     //oppure se il numero di link di BETA e`  pari al numero di archi massimo
-                    //oppure se non ci sono piu` nodi disponibili per collegarsi a ALFA                    
-                    if (deb > 8) {
+                    //oppure se non ci sono piu` nodi disponibili per collegarsi a ALFA
+                    if (debug > 8) {
                         System.out.println("\nCandidate set " + j + " nodes. Candidate is " + nodes[candidate_id] + " with " + cnd_link +
                                 "links.\n\tMatrix[" + current + "][" + nodes[candidate_id] + "] ?=? " + matrix[current][nodes[candidate_id]]);
                     }
-                    if (deb > 8) {
+                    if (debug > 8) {
                         System.out.print("\tCandidate needs links: " + (cnd_link < k));
                         System.out.println(" AND More candidates: " + (j > 1));
                     }
@@ -368,14 +369,16 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
                             matrix[nodes[candidate_id]][current] != 1 && matrix[current][nodes[candidate_id]] != 1 &&
                             matrix[current][split] != 1 && matrix[split][current] != 1 &&
                             matrix[nodes[candidate_id]][split] == 1 && matrix[split][nodes[candidate_id]] == 1) {
-                        if (deb > 8) {
+                        if (debug > 8) {
                             System.out.println("\tSplit on " + split + ". Current links " + curr_links + ", Cnd links " + cnd_link + " KK " + k);
                             System.out.println("\tMatrix " + matrix[split][nodes[candidate_id]] + " - " + matrix[nodes[candidate_id]][split]);
                         }
                         matrix[nodes[candidate_id]][split] = matrix[split][nodes[candidate_id]] = 0;
                         matrix[nodes[candidate_id]][current] = matrix[current][nodes[candidate_id]] = 1;
+                        curr_links++;
                         matrix[current][split] = matrix[split][current] = 1;
-                        if (deb > 8) {
+                        curr_links++;
+                        if (debug > 8) {
                             int cul = 0;
                             int cil = 0;
                             int spl = 0;
@@ -397,43 +400,43 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
                             matrix[current][nodes[candidate_id]] = 1;
                             matrix[nodes[candidate_id]][current] = 1;
                             curr_links++;
-                            if (deb > 8) {
+                            if (debug > 8) {
                                 System.out.println("\tLink DONE [" + current + "][" + nodes[candidate_id] + "]=" + matrix[current][nodes[candidate_id]] + ", set is " + j);
                             }
                         }
                     }
 
                     //count current node links
-                    if (deb > 8) {
-                        curr_links = 0;
+                    if (debug > 8) {
+                        int _curr_links = 0;
                         System.out.print("Node " + current + " >");
                         for (int c = 0; c < n; c++) {
                             System.out.print(matrix[current][c] + "|");
                             if (matrix[current][c] == 1) {
-                                curr_links++;
+                                _curr_links++;
                             }
                         }
-                        System.out.println("< # " + curr_links);
+                        System.out.println("< # " + _curr_links);
                     }
-                    curr_links = 0;
-                    //swap nodes 
+//                    curr_links = 0;
+                    //swap nodes
                     if (j > 0) {
-                        if (deb > 8) {
+                        if (debug > 8) {
                             System.out.println("\tnodes[" + candidate_id + "]=" + nodes[candidate_id] + " <=> nodes[" + j + "]=" + nodes[j]);
                         }
                         int tmp = nodes[j];
                         nodes[j] = nodes[candidate_id];
                         nodes[candidate_id] = tmp;
-                        if (deb > 8) {
+                        if (debug > 8) {
                             System.out.print("\tExcluding " + nodes[j] + " size " + j);
                         }
                     }
                     j--;
-                    if (deb > 8) {
+                    if (debug > 8) {
                         System.out.println(" --> " + j);
                     }
                     if (j > 0) {
-                        candidate_id = r.nextInt(j + 1);                    
+                        candidate_id = r.nextInt(j + 1);
                         if (split >= 0) {
                             split = -1;
                         }
@@ -451,23 +454,17 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
                 }
 
                 //END WHILE
-                if (deb > 8) {
+                if (debug > 8) {
                     System.out.print("\t " + nodes[j] + " size " + j);
-                }
-                
-                if (deb > 8) {
                     System.out.print("\nNode " + current + " <|");
-                }
-                for (int c = 0; c < n; c++) {
-                    if (deb > 8) {
+                    int _curr_links = 0;
+                    for (int c = 0; c < n; c++) {
                         System.out.print(matrix[current][c] + "|");
+                        if (matrix[current][c] == 1) {
+                            _curr_links++;
+                        }
                     }
-                    if (matrix[current][c] == 1) {
-                        curr_links++;
-                    }
-                }
-                if (deb > 8) {
-                    System.out.println("< # " + curr_links);
+                    System.out.println("< # " + _curr_links);
                 }
             }
         }
@@ -475,29 +472,26 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
         int cnt = 0;
         int err = 0;
         for (int i = 0; i < n; i++) {
-//            if (deb > 8) {
-//                System.out.print("Node " + i + " :[ ");
-//            }
             for (int j = 0; j < n; j++) {
                 if (matrix[i][j] == 1) {
                     if (i == j || matrix[j][i] != 1) {
-                        if (deb > 3) {
+                        if (debug > 3) {
                             System.out.println("??ERRORE!!");
                         }
                         part++;
                     } else {
                         cnt++;
-                        if (deb > 3) {
+                        if (debug > 3) {
                             System.out.print(1 + " ");
                         }
                         g.setEdge(i, j);
                         g.setEdge(j, i);
                     }
-                } else if (deb > 3) {
+                } else if (debug > 3) {
                     System.out.print(0 + " ");
                 }
             }
-            if (deb > 3) {
+            if (debug > 3) {
                 System.out.println(" >> " + cnt + (cnt != k ? "!!!" : "") + " - " + err);//"] " + part);
             }
             if (cnt != k) {
@@ -652,7 +646,7 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
                 int first = nodes.length;
                 while ((k - out_links_counter) > 1 && first > 0) {
                     int tg1 = r.nextInt(first);
-                    if (matrix[i][nodes[tg1]] == 0) {
+                    if (matrix[i][nodes[tg1]] == 0) {//filtro solo i link con cui  il nodo difettoso nn ha legami
                         first--;
                         int tmp = nodes[first];
                         nodes[first] = nodes[tg1];
@@ -854,23 +848,21 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
     }
 }
 
-
-// -------------------------------------------------------------------
+//----------------------------------------------------------------
 /*
 public static void main(String[] pars) {
- 
         int n = Integer.parseInt(pars[0]);
-        //int k = Integer.parseInt(pars[1]);
+        int k = Integer.parseInt(pars[1]);
         Graph g = new BitMatrixGraph(n);
- 
-        //wireWS(g,20,.1,new Random());
-        //GraphIO.writeChaco(new UndirectedGraph(g),System.out);
- 
-        //wireScaleFreeBA(g,3,new Random());
-        //wireKOut(g,k,new Random());
-        //wireRegRootedTree(g,k);
+        
+        wireWS(g,20,.1,new Random());
+        GraphIO.writeChaco(new UndirectedGraph(g),System.out);
+        
+        wireScaleFreeBA(g,3,new Random());
+        wireKOut(g,k,new Random());
+        wireRegRootedTree(g,k);
         wireHypercube(g);
+        wireKOutUnd(g, k, new ExtendedRandom(k));
         GraphIO.writeNeighborList(g,System.out);
 }
- */
-
+*/
