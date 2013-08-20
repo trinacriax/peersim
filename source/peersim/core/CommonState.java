@@ -18,6 +18,7 @@
 
 package peersim.core;
 
+import java.util.Date;
 import peersim.config.*;
 import peersim.util.*;
 
@@ -90,6 +91,12 @@ private static int pid;
  * The current node.
  */
 private static Node node;
+
+
+/**
+ * Current simulation start time
+ */
+private static Date date;
 
 /**
 * This source of randomness should be used by all components.
@@ -307,6 +314,15 @@ public static String getConfig(){
 public static void setArguments(String args[]){
 	arguments = args;
 }
+
+public static void setSimTime(Date _date){
+  date = _date;
+  }
+
+public static Date getSimTime(){
+  return date;
+  }
+
 //-----------------------------------------------------------------
 
 /*
