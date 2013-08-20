@@ -59,6 +59,11 @@ private static final String PAR_STEP = "step";
 */
 private static final String PAR_AT = "at";
 
+/** 
+* Defaults to 0. That is, normal step, otherwise random in step.
+* @config
+*/
+private static final String PAR_RND = "RANDOM";
 
 /** 
 * Defaults to 0.
@@ -87,6 +92,8 @@ public final long step;
 public final long from;
 
 public final long until;
+
+public final boolean rnd;
 
 public final boolean fin;
 
@@ -127,6 +134,7 @@ public Scheduler(String prefix, boolean useDefault)
 		from = at;
 		until = at+1;
 		step = 1;
+        rnd = false;
 	} else {
 		if (useDefault) 
 			step = Configuration.getLong(prefix+"."+PAR_STEP,1);
@@ -134,6 +142,7 @@ public Scheduler(String prefix, boolean useDefault)
 			step = Configuration.getLong(prefix+"."+PAR_STEP);
 		from = Configuration.getLong(prefix+"."+PAR_FROM,0);
 		until = Configuration.getLong(prefix+"."+PAR_UNTIL,Long.MAX_VALUE);
+        rnd = Configuration.contains(prefix+"."+PAR_RND);
 	}
 	next = from;
 	fin = Configuration.contains(prefix+"."+PAR_FINAL);
@@ -167,10 +176,10 @@ public boolean active() {
 */
 public long getNext()
 {
-	long ret = next;
+	long ret = (rnd) ? (next + CommonState.r.nextLong(step)):next;
 	// check like this to prevent integer overflow of "next"
 	if( until-next > step ) next += step;
-	else next = -1;
+	else next = -1;    
 	return ret;
 }
 
