@@ -1,0 +1,2 @@
+- creato metodo di rimozione nodi solo in peersim.core.IdleProtocol
+- creato metodo di clear del grafo nella classe OverlayGraph
