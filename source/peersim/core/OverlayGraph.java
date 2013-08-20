@@ -163,21 +163,22 @@ public boolean setEdge( int i, int j ) {
 // XXX slightly unintuitive behavior but makes sense when understood
 	
 	if( !wireDirected ) 
-		((Linkable)Network.node[j].getProtocol(protocolID)
-		).addNeighbor(Network.node[i]);
-
-
+		((Linkable)Network.node[j].getProtocol(protocolID)).addNeighbor(Network.node[i]);
 	return
-		((Linkable)Network.node[i].getProtocol(protocolID)
-		).addNeighbor(Network.node[j]);
+		((Linkable)Network.node[i].getProtocol(protocolID)).addNeighbor(Network.node[j]);
 }
 
 // ---------------------------------------------------------------
 
 /** Not supported */
 public boolean clearEdge( int i, int j ) {
-	
-	throw new UnsupportedOperationException();
+	((Linkable)Network.node[i].getProtocol(protocolID)
+		).remNeighbor(Network.node[j]);
+    ((Linkable)Network.node[j].getProtocol(protocolID)
+		).remNeighbor(Network.node[i]);
+    return (((Linkable)Network.node[i].getProtocol(protocolID)).contains(Network.node[j]) &&
+            (((Linkable)Network.node[i].getProtocol(protocolID)).contains(Network.node[j])));
+//	throw new UnsupportedOperationException();
 }
 
 // ---------------------------------------------------------------

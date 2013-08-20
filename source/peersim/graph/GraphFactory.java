@@ -267,7 +267,594 @@ http://arxiv.org/pdf/cond-mat/0408391</a>. In both cases, the number of the
         
         return g;
     }
-    
+        
+    public static Graph wireKOutUnd( Graph g, int k, Random r ) {
+        int deb = 0;
+        if (deb > 8) {
+            System.out.println("Nodes " + g.size() + " links " + k);
+        }
+        final int n = g.size();
+        // solo 1 nodo
+        if (n < 2) {
+            return g;
+        }
+        // piu` archi dei vertici presenti
+        if (n <= k) {
+            k = n - 1;
+        }
+        int[][] matrix = new int[n][n];
+        //init adjacency matrix
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < n; ++j) {
+                matrix[i][j] = 0;
+            }
+        }
+        if (deb > 8) {
+            System.out.println("Adjacency matrix initilized and empty. " + n);
+        }
+        //matrice usata per permutare gli indici dei nodi
+        int nodes[] = new int[n];
+        for (int i = 0; i < n; ++i) {
+            nodes[i] = i;
+        }
+        //permutazione indici
+        for (int i = 0; i < n; ++i) {
+            int j = r.nextInt(n);
+            int tmp = nodes[i];
+            nodes[i] = nodes[j];
+            nodes[j] = tmp;
+        }
+        for (int current = 0; current < n; current++) {
+            int curr_links = 0;
+            if (deb > 8) {
+                System.out.print("\nNode " + current + " > |");
+            }
+            //check number of edges of this node
+            for (int c = 0; c < n; c++) {
+                if (deb > 8) {
+                    System.out.print(matrix[current][c] + "|");
+                }
+                if (matrix[current][c] == 1) {
+                    curr_links++;
+                }
+            }
+            if (deb > 8) {
+                System.out.println("< # " + curr_links + ", looking for " + (k - curr_links) + " links.");
+            }
+            int j = n;//available nodes for set.
+            //removing current node from its candidate SET
+            for (int i = 0; i < n; i++) {
+                if (nodes[i] == current) {
+                    int tmp = nodes[i];
+                    nodes[i] = nodes[n - 1];
+                    nodes[n - 1] = tmp;
+                    j--;
+                }
+            }
+            if (deb > 8) {
+                System.out.println("Start while for " + current + ", size " + j + " escluding " + nodes[j + 1]);
+            }
+            //creo archi finche` posso
+            while (curr_links < k && j > 0) {
+                int candidate_id = r.nextInt(j);//estraggo un id nodo per il nodo  BETA
+                int cnd_link = 0;//# link del nodo BETA
+                for (int c = 0; c < n; c++) {//conto quanti curr_links ha il nodo BETA
+                    if (matrix[nodes[candidate_id]][c] == 1) {
+                        cnd_link++;
+                    }
+                }
+                if (deb > 8) {
+                    System.out.println("Candidate " + nodes[candidate_id] + " (" + candidate_id + ")");
+                }
+                if (deb > 8) {
+                    System.out.println((cnd_link < k) + "  AND " + (j > 0));
+                }
+                int split = -1;
+                //Attualmente sto riempiendo la riga del nodo i detto ALFA
+                while (curr_links < k && j > 0) {
+                    //se esiste gia` un link tra ALFA e BETA oppure se ALFA e BETA sono gli stessi nodi
+                    //oppure se il numero di link di BETA e`  pari al numero di archi massimo
+                    //oppure se non ci sono piu` nodi disponibili per collegarsi a ALFA                    
+                    if (deb > 8) {
+                        System.out.println("\nCandidate set " + j + " nodes. Candidate is " + nodes[candidate_id] + " with " + cnd_link +
+                                "links.\n\tMatrix[" + current + "][" + nodes[candidate_id] + "] ?=? " + matrix[current][nodes[candidate_id]]);
+                    }
+                    if (deb > 8) {
+                        System.out.print("\tCandidate needs links: " + (cnd_link < k));
+                        System.out.println(" AND More candidates: " + (j > 1));
+                    }
+                    //removing a link from candidate
+                    if (cnd_link == k && (curr_links + 2) <= k && split > 0 &&
+                            matrix[nodes[candidate_id]][current] != 1 && matrix[current][nodes[candidate_id]] != 1 &&
+                            matrix[current][split] != 1 && matrix[split][current] != 1 &&
+                            matrix[nodes[candidate_id]][split] == 1 && matrix[split][nodes[candidate_id]] == 1) {
+                        if (deb > 8) {
+                            System.out.println("\tSplit on " + split + ". Current links " + curr_links + ", Cnd links " + cnd_link + " KK " + k);
+                            System.out.println("\tMatrix " + matrix[split][nodes[candidate_id]] + " - " + matrix[nodes[candidate_id]][split]);
+                        }
+                        matrix[nodes[candidate_id]][split] = matrix[split][nodes[candidate_id]] = 0;
+                        matrix[nodes[candidate_id]][current] = matrix[current][nodes[candidate_id]] = 1;
+                        matrix[current][split] = matrix[split][current] = 1;
+                        if (deb > 8) {
+                            int cul = 0;
+                            int cil = 0;
+                            int spl = 0;
+                            for (int count = 0; count < matrix[current].length; count++) {
+                                if (matrix[nodes[candidate_id]][count] == 1) {
+                                    cul++;
+                                }
+                                if (matrix[current][count] == 1) {
+                                    cil++;
+                                }
+                                if (matrix[split][count] == 1) {
+                                    spl++;
+                                }
+                            }
+                            System.out.println("Curr " + cil + (cil > k ? "##" : "") + ", Cand " + cul + (cul > k ? "##" : "") + ", Spl " + spl + (spl > k ? "##" : ""));
+                        }
+                    } else if (curr_links < k && cnd_link < k) {
+                        if (nodes[candidate_id] != current) {
+                            matrix[current][nodes[candidate_id]] = 1;
+                            matrix[nodes[candidate_id]][current] = 1;
+                            curr_links++;
+                            if (deb > 8) {
+                                System.out.println("\tLink DONE [" + current + "][" + nodes[candidate_id] + "]=" + matrix[current][nodes[candidate_id]] + ", set is " + j);
+                            }
+                        }
+                    }
+
+                    //count current node links
+                    if (deb > 8) {
+                        curr_links = 0;
+                        System.out.print("Node " + current + " >");
+                        for (int c = 0; c < n; c++) {
+                            System.out.print(matrix[current][c] + "|");
+                            if (matrix[current][c] == 1) {
+                                curr_links++;
+                            }
+                        }
+                        System.out.println("< # " + curr_links);
+                    }
+                    curr_links = 0;
+                    //swap nodes 
+                    if (j > 0) {
+                        if (deb > 8) {
+                            System.out.println("\tnodes[" + candidate_id + "]=" + nodes[candidate_id] + " <=> nodes[" + j + "]=" + nodes[j]);
+                        }
+                        int tmp = nodes[j];
+                        nodes[j] = nodes[candidate_id];
+                        nodes[candidate_id] = tmp;
+                        if (deb > 8) {
+                            System.out.print("\tExcluding " + nodes[j] + " size " + j);
+                        }
+                    }
+                    j--;
+                    if (deb > 8) {
+                        System.out.println(" --> " + j);
+                    }
+                    if (j > 0) {
+                        candidate_id = r.nextInt(j + 1);                    
+                        if (split >= 0) {
+                            split = -1;
+                        }
+                        cnd_link = 0;
+                        for (int c = 0; c < n; c++) {//conto quanti curr_links ha il nodo BETA
+                            if (matrix[nodes[candidate_id]][c] == 1) {
+                                cnd_link++;
+                                if (cnd_link > 0 && split < 0 && matrix[current][nodes[candidate_id]] != 1 && matrix[current][c] != 1) {
+                                        split = c;
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+                //END WHILE
+                if (deb > 8) {
+                    System.out.print("\t " + nodes[j] + " size " + j);
+                }
+                
+                if (deb > 8) {
+                    System.out.print("\nNode " + current + " <|");
+                }
+                for (int c = 0; c < n; c++) {
+                    if (deb > 8) {
+                        System.out.print(matrix[current][c] + "|");
+                    }
+                    if (matrix[current][c] == 1) {
+                        curr_links++;
+                    }
+                }
+                if (deb > 8) {
+                    System.out.println("< # " + curr_links);
+                }
+            }
+        }
+        int part = 0;
+        int cnt = 0;
+        int err = 0;
+        for (int i = 0; i < n; i++) {
+//            if (deb > 8) {
+//                System.out.print("Node " + i + " :[ ");
+//            }
+            for (int j = 0; j < n; j++) {
+                if (matrix[i][j] == 1) {
+                    if (i == j || matrix[j][i] != 1) {
+                        if (deb > 3) {
+                            System.out.println("??ERRORE!!");
+                        }
+                        part++;
+                    } else {
+                        cnt++;
+                        if (deb > 3) {
+                            System.out.print(1 + " ");
+                        }
+                        g.setEdge(i, j);
+                        g.setEdge(j, i);
+                    }
+                } else if (deb > 3) {
+                    System.out.print(0 + " ");
+                }
+            }
+            if (deb > 3) {
+                System.out.println(" >> " + cnt + (cnt != k ? "!!!" : "") + " - " + err);//"] " + part);
+            }
+            if (cnt != k) {
+                err++;
+            }
+            cnt = 0;
+            part = 0;
+        }
+
+        System.err.println("#Overlay done ");
+        return g;
+    }
+
+    public static Graph wireKOutUnd2(Graph g, int k, Random r) {
+        int deb = 10;
+        if (deb > 0) {
+            System.out.println("Nodes " + g.size() + " links " + k);
+        }
+        final int n = g.size();
+        // solo 1 nodo
+        if (n < 2) {
+            return g;
+        }
+        // piu` archi dei vertici presenti
+        if (n <= k) {
+            k = n - 1;
+        }
+        int[][] matrix = new int[n][n];
+        //init adjacency matrix
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < n; ++j) {
+                matrix[i][j] = 0;
+            }
+        }
+        if (deb > 0) {
+            System.out.println("Adjacency matrix initilized and empty.");
+        }
+        //matrice usata per permutare gli indici dei nodi
+        int nodes[] = new int[n];
+        for (int i = 0; i < n; ++i) {
+            nodes[i] = i;
+        }
+        //permutazione indici
+        for (int i = 0; i < n; ++i) {
+            int j = r.nextInt(n);
+            int tmp = nodes[i];
+            nodes[i] = nodes[j];
+            nodes[j] = tmp;
+        }
+        if (deb > 0) {
+            System.out.println("Permutation done.");
+        }
+        for (int i = 0; i < n; i++) {
+            int links = 0;
+            if (deb > 0) {
+                System.out.print("\nNode #" + i + " >>> ");
+            }
+            //controllo il numero di links per nodo
+            for (int c = 0; c < n; c++) {
+                if (deb > 0) {
+                    System.out.print(matrix[i][c] + ", ");
+                }
+                if (matrix[i][c] == 1) {
+                    links++;
+                }
+            }
+            if (deb > 0) {
+                System.out.println(" : links " + links);
+            }
+            int j = n;
+            // j prende il valore dell'ultimo nodo
+            if (deb > 0) {
+                System.out.println("Filling node " + i);
+            }
+            //creo archi finche` posso
+            while (links < k && j > 0) {
+                int id = r.nextInt(j);//estraggo un id nodo per il nodo  BETA
+                int cnd_link = 0;//# link del nodo BETA
+                for (int c = 0; c < n; c++) {//conto quanti links ha il nodo BETA
+                    if (matrix[nodes[id]][c] == 1) {
+                        cnd_link++;
+                    }
+                }
+                //Attualmente sto riempiendo la riga del nodo i detto ALFA
+                while ((matrix[i][nodes[id]] != 0 || nodes[id] == i || cnd_link == k) && j > 1) {
+                    //se esiste gia` un link tra ALFA e BETA oppure se ALFA e BETA sono gli stessi nodi
+                    //oppure se il numero di link di BETA e`  pari al numero di archi massimo
+                    //oppure se non ci sono piu` nodi disponibili per collegarsi a ALFA
+                    if (deb > 0) {
+                        System.out.println("Need another node J:: " + j + ", nodes[" + id + "]=" + nodes[id] + "; Matrix [" + i + "][" + nodes[id] + "]=" + matrix[i][nodes[id]]);
+                    }
+                    if (deb > 0) {
+                        System.out.println("\tChange nodes[" + (j - 1) + "]=" + nodes[j - 1] + " with nodes[" + id + "]=" + nodes[id]);
+                    }
+                    int tmp = nodes[j - 1];
+                    nodes[j - 1] = nodes[id];
+                    nodes[id] = tmp;
+                    j--;
+                    id = r.nextInt(j);
+                    cnd_link = 0;
+                    for (int c = 0; c < n; c++) {
+                        if (matrix[nodes[id]][c] == 1) {
+                            cnd_link++;
+                        }
+                    }
+                }
+                if (j > 0) {
+                    if (nodes[id] != i) {
+                        matrix[i][nodes[id]] = 1;
+                        matrix[nodes[id]][i] = 1;
+                        links++;
+                        if (deb > 0) {
+                            System.out.println("J:" + j + ", nodes[" + id + "]=" + nodes[id] + "; Matrix [" + i + "][" + nodes[id] + "]=" + matrix[i][nodes[id]]);
+                        }
+                        if (deb > 0) {
+                            System.out.println("\tChange nodes[" + (j - 1) + "]=" + nodes[j - 1] + " with nodes[" + id + "]=" + nodes[id]);
+                        }
+                        int tmp = nodes[j - 1];
+                        nodes[j - 1] = nodes[id];
+                        nodes[id] = tmp;
+                    }
+                    j--;
+                }
+            }
+        }
+        int out_links_counter = 0;
+        for (int i = 0; i < n; i++) {
+            if (deb > 0) {
+                System.out.println("Analyzing Node " + i);
+            }
+            out_links_counter = 0;
+            for (int d = 0; d < n; d++) {
+                if (deb > 0) {
+                    System.out.print(matrix[i][d] + ", ");
+                }
+                out_links_counter += matrix[i][d];
+            }
+            if (k - out_links_counter > 1 && (n - out_links_counter - 1) > 0) {
+                if (deb > 0) {
+                    System.out.println("\n\t>>> Node " + i + " need help, it has " + out_links_counter + " links instead of " + k + " ... ");
+                }
+                nodes = new int[n - out_links_counter];
+                int index = 0;
+                for (int d = 0; d < n; d++) {
+                    if (matrix[i][d] == 0 && d != i) {
+                        nodes[index++] = d;
+                        if (deb > 0) {
+                            System.out.print(d + ", ");
+                        }
+                    }
+                }
+                int first = nodes.length;
+                while ((k - out_links_counter) > 1 && first > 0) {
+                    int tg1 = r.nextInt(first);
+                    if (matrix[i][nodes[tg1]] == 0) {
+                        first--;
+                        int tmp = nodes[first];
+                        nodes[first] = nodes[tg1];
+                        nodes[tg1] = tmp;
+                        tg1 = nodes[first];
+                        int len = 0;
+                        int tg2[] = new int[n];
+                        if (deb > 0) {
+                            System.out.print("\tLink tagliabili da " + tg1 + " a :");
+                        }
+                        for (int d = 0; d < n; d++) {
+                            if (matrix[tg1][d] == 1 && matrix[i][d] == 0) {
+                                tg2[len] = d;
+                                len++;
+                                if (deb > 0) {
+                                    System.out.print(d + ", ");
+                                }
+                            }
+                        }
+                        int tg3 = r.nextInt(len);
+
+                        matrix[tg1][tg3] = matrix[tg3][tg1] = 0;
+                        matrix[i][tg1] = matrix[tg1][1] = 1;
+                        if (deb > 0) {
+                            System.out.println("\n\tTAGLIO link " + tg1 + " <=>" + tg3);
+                        }
+                        out_links_counter++;
+                        matrix[i][tg3] = matrix[tg3][1] = 1;
+                        out_links_counter++;
+                        if (deb > 0) {
+                            System.out.println("\tOutlink " + out_links_counter + " New row for " + i + ": ");
+                        }
+                        if (deb > 0) {
+                            for (int d = 0; d < n; d++) {
+                                if (deb > 0) {
+                                    System.out.print(matrix[i][d] + ", ");
+                                }
+                            }
+                        }
+                        if (deb > 0) {
+                            System.out.println();
+                        }
+                    }
+                    if (deb > 0) {
+                        System.out.println("K " + k + " Outlink " + out_links_counter + " First " + first);
+                    }
+                }
+            }
+            if (deb > 0) {
+                System.out.println();
+            }
+        }
+        if (deb > 0) {
+            for (int i = 0; i < n; i++) {
+                out_links_counter = 0;
+                for (int d = 0; d < n; d++) {
+                    System.out.print(matrix[i][d] + "|");
+                    out_links_counter += matrix[i][d];
+                }
+                if (k - out_links_counter > 1) {
+                    System.out.print(">>> Node " + i + " need help, it has " + out_links_counter + " links instead of " + k + " ... ");
+                }
+                System.out.print("\n");
+            }
+        }
+        int part = 0;
+        for (int i = 0; i < n; i++) {
+            if (deb > 0) {
+                System.out.print("Node " + i + " :[ ");
+            }
+            for (int j = 0; j < n; j++) {
+                if (matrix[i][j] == 1) {
+                    if (i == j) {
+                        if (deb > 0) {
+                            System.out.println("??Errore!!");
+                        }
+                        part++;
+                    } else {
+                        if (deb > 0) {
+                            System.out.print(j + ",");
+                        }
+                        g.setEdge(i, j);
+                        g.setEdge(j, i);
+                    }
+                }
+            }
+            if (deb > 0) {
+                System.out.println("] " + part);
+            }
+            part = 0;
+        }
+
+//         ArrayList rich = new ArrayList();
+//        ArrayList poor = new ArrayList();
+//        for (int i = 0; i < n; i++) {
+//            System.out.print("<" + i + "> ");
+//            out_links_counter = 0;
+//            for (int d = 0; d < n; d++) {
+//                System.out.print(matrix[i][d] + "|");
+//                out_links_counter += matrix[i][d];
+//            }
+//            if (out_links_counter < k) {
+//                poor.add(i);
+//                System.out.print(">>> Node " + i + " it has LESS " + out_links_counter + " links instead of " + k + " ... ");
+//            } else if (out_links_counter > k) {
+//                System.out.print(">>> Node " + i + " it has MORE " + out_links_counter + " links instead of " + k + " ... ");
+//                rich.add(i);
+//            } else {
+//                out_links_counter = 0;
+//            }
+//            System.out.print("\n");
+//        }
+//
+//        for(int i = 0 ; i <= poor.size(); i++){
+//            int apoor = (Integer)poor.remove(0);
+//            System.out.println("Poor "+apoor);
+//            for(int j= 0 ; j<= rich.size(); j++){
+//                int arich=(Integer)rich.remove(0);
+//                System.out.println("Rich "+ arich);
+//                int peerid =0;//PEER IN PIU`
+//                System.out.println("finding last peer in RR "+arich);
+//                int last = -1;
+//                for(int z = 0; z < matrix[arich].length;z++){
+//                    if(matrix[arich][z]>0 && z!=apoor)
+//                        last = z;
+//
+//                }
+//                System.out.println("["+arich+","+last+"]="+matrix[arich][last]);
+//                        peerid = last;
+//                        matrix[arich][last] = 0;
+//                }
+//                System.out.println("finding last hole in poor");
+//                for(int z = 0; z < matrix[apoor].length && matrix[apoor][z]>0;z++){
+//                    if(matrix[apoor][z]==0){
+//                        matrix[apoor][z]=peerid;
+//                        System.out.println("Last hole is "+z);
+//                    }
+//                }
+//                System.out.println("finding " + arich+" in "+peerid);
+//                for(int z = 0; z < matrix[peerid].length && matrix[peerid][z]>0;z++){
+//                    if(matrix[peerid][z]==arich){
+//                        System.out.println("is in pos "+z);
+//                        matrix[apoor][z]=apoor;
+//
+//                    }
+//                }
+//
+//            }
+//
+//        }
+//
+//        while(!rich.isEmpty()&&rich.size()%2==0){
+//                int arich=(Integer)rich.remove(0);//14
+//                System.out.println("Rich "+ arich+" " +rich.size());
+//                int brich=(Integer)rich.remove(0);//16
+//                int last_arich = matrix[arich][k];//45
+//                int last_brich = matrix[brich][k];//47
+//                matrix[arich][k]=-1;
+//                matrix[brich][k]=-1;
+//                for(int i = 0; i < matrix[last_arich].length; i++)
+//                    if(matrix[last_arich][i]== arich)
+//                        matrix[last_arich][i]= last_brich;
+//                for(int i = 0; i < matrix[last_brich].length; i++)
+//                    if(matrix[last_brich][i]== brich)
+//                        matrix[last_brich][i]= last_arich;
+//            }
+//
+//        for (int i = 0; i < n; i++) {
+//            System.out.print("<" + i + "> ");
+//            out_links_counter = 0;
+//            for (int d = 0; d < n; d++) {
+//                System.out.print(matrix[i][d] + "|");
+//                out_links_counter += matrix[i][d];
+//            }
+//            if (out_links_counter < k) {
+//                poor.add(i);
+//                System.out.print(">>> Node " + i + " it has LESS " + out_links_counter + " links instead of " + k + " ... ");
+//            } else if (out_links_counter > k) {
+//                System.out.print(">>> Node " + i + " it has MORE " + out_links_counter + " links instead of " + k + " ... ");
+//                rich.add(i);
+//            } else {
+//                out_links_counter = 0;
+//            }
+//            System.out.print("\n");
+//        }
+//
+//        for(int i = 0 ; i < poor.size(); i++){
+//            int apoor = (Integer)poor.remove(0);
+//            System.out.println("Poor "+ apoor);
+//            for(int j= 0 ; j<= rich.size(); j++){
+//                int arich=(Integer)rich.remove(0);
+//                System.out.println("Rich "+ arich);
+//            }
+//
+//        }
+
+        System.err.println("#Overlay done");
+        return g;
+    }
+}
+
+
 // -------------------------------------------------------------------
 /*
 public static void main(String[] pars) {
@@ -286,63 +873,4 @@ public static void main(String[] pars) {
         GraphIO.writeNeighborList(g,System.out);
 }
  */
-    
-    public static Graph wireKOutUnd( Graph g, int k, Random r ) {
-        final int n = g.size();
-        if( n < 2 ) return g;
-        if( n <= k ) k=n-1;
-        int[] nodes = new int[n];
-        for(int i=0; i<nodes.length; ++i)
-            nodes[i]=i;
-        for(int i=0; i<nodes.length; ++i){
-            int tmp = nodes[i];
-            int index = (r.nextInt(nodes.length)+i*tmp)%nodes.length;
-            nodes[i] = nodes[index];
-            nodes[index] = tmp;
-        }
-        
-//      int contact[] = new int[n];
-//      for(int i=0; i<n; ++i)
-//              contact[i]=0;
-        
-        for(int i=0; i<n; ++i) {
-//              System.out.println("Nodo "+ i+" : ");
-            int j=0;
-            while(g.getNeighbours(i).size() < k) {
-                int count = 0;
-                if(j==n)
-                    return null;
-                int newedge = j+r.nextInt(n-j);
-//                      System.out.println("\tcandidato "+ nodes[newedge]+" va al posto di "+nodes[j]+" J "+j);
-                while(g.getNeighbours(nodes[newedge]).size()>=k){
-//                              System.out.println("\tcandidato "+ nodes[newedge]+" va al posto di "+nodes[j]+" .J "+j);
-                    newedge = j+r.nextInt(n-j);
-                    int tmp = nodes[j];
-                    nodes[j] = nodes[newedge];
-                    nodes[newedge] = tmp;
-                    j++;
-                    count++;
-                    if(j==n)
-                        return null;
-                }
-                int tmp = nodes[j];
-                nodes[j] = nodes[newedge];
-                nodes[newedge] = tmp;
-                if( nodes[j] != i ) {
-                    g.setEdge(i,nodes[j]);
-//                              contact[i]++;
-//                              contact[nodes[j]]++;
-                    j++;
-                } else if( j==(n-1) && nodes[j]==i)
-                    return null;
-            }
-            Iterator iter =g.getNeighbours(i).iterator();
-//              System.out.print("Node "+ i+" "+g.getNeighbours(i).size()+" [ ");
-//              while(iter.hasNext())
-//                      System.out.print((Integer)iter.next() +", ");
-//              System.out.println(" ]");
-        }
-        return g;
-    }
-}
 
